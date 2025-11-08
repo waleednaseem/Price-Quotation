@@ -1,41 +1,22 @@
-'use client'
+import Link from "next/link";
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import LoadingSpinner from '@/components/LoadingSpinner'
-
-export default function HomePage() {
-  const router = useRouter()
-  const { isAuthenticated, user, loading } = useAuth()
-
-  useEffect(() => {
-    if (!loading) {
-      if (isAuthenticated && user) {
-        // Redirect based on role
-        if (user.role === 'ADMIN') {
-          router.push('/admin/dashboard')
-        } else {
-          router.push('/client/dashboard')
-        }
-      } else {
-        // Redirect to login
-        router.push('/login')
-      }
-    }
-  }, [isAuthenticated, user, loading, router])
-
-  // Show loading spinner while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Loading...</p>
+export default function Home() {
+  return (
+    <div className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center px-4 py-16">
+      <main className="w-full rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+        <h1 className="text-3xl font-semibold">Quotation Management UI</h1>
+        <p className="mt-2 text-zinc-600">Static demo with Context API, Tailwind, and toast notifications.</p>
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Link href="/admin" className="rounded-xl border border-zinc-200 bg-zinc-50 p-6 hover:bg-zinc-100">
+            <div className="text-lg font-medium">Admin</div>
+            <div className="text-sm text-zinc-600">Create, edit, and export quotations.</div>
+          </Link>
+          <Link href="/client" className="rounded-xl border border-zinc-200 bg-zinc-50 p-6 hover:bg-zinc-100">
+            <div className="text-lg font-medium">Client</div>
+            <div className="text-sm text-zinc-600">View a quotation, remove features, negotiate.</div>
+          </Link>
         </div>
-      </div>
-    )
-  }
-
-  return null
+      </main>
+    </div>
+  );
 }
