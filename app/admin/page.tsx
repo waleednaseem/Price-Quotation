@@ -20,6 +20,7 @@ export default function AdminPage() {
     removeFeature,
   } = useQuotations();
   const { clients } = useClient();
+  const [verifyWarning, setVerifyWarning] = useState<string | null>(null);
 
   const selected = useMemo(() => (selectedQuotationId ? getQuotation(selectedQuotationId) : undefined), [selectedQuotationId, quotations]);
 
@@ -33,6 +34,11 @@ export default function AdminPage() {
   const [sendingInvite, setSendingInvite] = useState<boolean>(false);
 
   useEffect(() => {
+    fetch('/api/session').then(async (r) => {
+      const d = await r.json();
+      if (d?.user && d.user.email_verified === false) setVerifyWarning('Please verify your email to unlock all features');
+      else setVerifyWarning(null);
+    }).catch(() => {});
     if (selected) {
       setProjectName(selected.projectName);
       setCompanyName(selected.companyName);
@@ -122,6 +128,11 @@ export default function AdminPage() {
       <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50" />
       <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(251, 191, 36, 0.05) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(249, 115, 22, 0.05) 0%, transparent 50%)' }} />
       <div className="relative mx-auto max-w-7xl px-6 py-8">
+      {verifyWarning && (
+        <div className="mb-4 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
+          {verifyWarning}
+        </div>
+      )}
       <div className="mb-8">
         <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs font-medium text-amber-900 shadow-sm backdrop-blur-sm mb-3">
           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

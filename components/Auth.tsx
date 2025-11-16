@@ -46,7 +46,8 @@ export default function Auth({ initialView = "login" }: { initialView?: View }) 
     const errs: Record<string, string> = {};
     if (!name || name.trim().length < 2) errs.name = "Name must be at least 2 characters";
     if (!emailRegex.test(email)) errs.email = "Enter a valid email";
-    if (!password || password.length < 6) errs.password = "Password must be at least 6 characters";
+    const strongRe = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={}\[\]:;"'<>,.?/]).{8,}$/;
+    if (!strongRe.test(password)) errs.password = "Password must be 8+ chars with upper, lower, number, symbol";
     if (password !== confirm) errs.confirm = "Passwords do not match";
     if (!terms) errs.terms = "You must accept the terms";
     setSignupErrors(errs);
@@ -69,7 +70,11 @@ export default function Auth({ initialView = "login" }: { initialView?: View }) 
       router.push(role === "admin" ? "/admin" : "/client");
     }).catch((err) => {
       const msg = err?.response?.data?.error || err?.message || "Login failed";
-      notifyError(msg);
+      if (msg === "email not verified") {
+        notifyError("Please verify your email before login");
+      } else {
+        notifyError(msg);
+      }
     });
   };
 
@@ -77,8 +82,7 @@ export default function Auth({ initialView = "login" }: { initialView?: View }) 
     e.preventDefault();
     if (!validateSignup()) return;
     axios.post('/api/auth/signup', { name: name.trim(), email: email.toLowerCase(), role, password }).then(() => {
-      fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'register', email: email.toLowerCase(), name: name.trim(), role }) }).catch(() => {});
-      notifySuccess("Verification email sent. Please approve via link to sign in");
+      notifySuccess("Verification email sent. Please verify via link in email");
       router.push("/login");
     }).catch((err) => {
       const msg = err?.response?.data?.error || err?.message || "Signup failed";
@@ -205,7 +209,21 @@ export default function Auth({ initialView = "login" }: { initialView?: View }) 
                       <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-300" />
                       Remember me
                     </label>
-                    <button type="button" onClick={() => notifyError("Password reset coming soon")} className="text-sm font-medium text-amber-700 hover:underline">Forgot password?</button>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => notifyError("Password reset coming soon")} className="text-sm font-medium text-amber-700 hover:underline">Forgot password?</button>
+                      <button type="button" onClick={() => {
+                        const e = loginEmail.toLowerCase();
+                        if (!emailRegex.test(e)) return notifyError("Enter a valid email first");
+                        fetch('/api/auth/resend-verification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: e }) })
+                          .then(async (r) => {
+                            const d = await r.json();
+                            if (!d.ok) return notifyError(d.error || 'Failed');
+                            if (d.already_verified) return notifySuccess('Email already verified');
+                            notifySuccess('Verification email resent');
+                          })
+                          .catch(() => notifyError('Network error'));
+                      }} className="text-sm font-medium text-amber-700 hover:underline">Resend verification</button>
+                    </div>
                   </div>
                   <button type="submit" className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-500 to-orange-500 px-5 py-2.5 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

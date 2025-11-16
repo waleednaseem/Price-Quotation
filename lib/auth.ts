@@ -1,6 +1,17 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 
+export function createVerificationToken() {
+  const raw = crypto.randomBytes(32).toString("hex");
+  const hash = crypto.createHash("sha256").update(raw).digest("hex");
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return { token: raw, hash, expires };
+}
+
+export function hashToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 export function hashPassword(password: string) {
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto.scryptSync(password, salt, 64).toString("hex");

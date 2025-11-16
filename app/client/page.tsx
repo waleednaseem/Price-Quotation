@@ -3,19 +3,33 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useQuotations } from "../../context/QuotationContext";
 import { useClient } from "../../context/ClientContext";
+import { useEffect, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 
 export default function ClientIndexPage() {
   const { quotations } = useQuotations();
   const { currentClient, loginWithProfile, logout } = useClient();
+  const [verifyWarning, setVerifyWarning] = useState<string | null>(null);
   const visible = currentClient ? quotations.filter((q) => q.clientId === currentClient.id) : quotations;
   const googleEnabled = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  useEffect(() => {
+    fetch('/api/session').then(async (r) => {
+      const d = await r.json();
+      if (d?.user && d.user.email_verified === false) setVerifyWarning('Please verify your email to unlock all features');
+      else setVerifyWarning(null);
+    }).catch(() => {});
+  }, []);
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50" />
       <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(251, 191, 36, 0.05) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(249, 115, 22, 0.05) 0%, transparent 50%)' }} />
       <div className="relative mx-auto max-w-6xl px-6 py-8">
+      {verifyWarning && (
+        <div className="mb-4 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
+          {verifyWarning}
+        </div>
+      )}
       <div className="mb-8">
         <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs font-medium text-amber-900 shadow-sm backdrop-blur-sm mb-3">
           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,7 +40,7 @@ export default function ClientIndexPage() {
         <h1 className="bg-gradient-to-r from-amber-700 via-orange-600 to-amber-700 bg-clip-text text-4xl font-bold tracking-tight text-transparent">View Quotations</h1>
         <p className="mt-2 text-zinc-600">Browse your quotations and open details to negotiate or accept.</p>
       </div>
-      <div className="mb-6 flex items-center justify-between rounded-2xl border border-amber-200 bg-white/95 p-5 shadow-lg backdrop-blur-sm">
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-amber-200 bg-white/95 p-5 shadow-lg backdrop-blur-sm">
         {currentClient ? (
           <div className="flex items-center gap-4">
             {currentClient.picture && <img src={currentClient.picture} alt="avatar" className="h-12 w-12 rounded-full border-2 border-amber-200 shadow-md" />}

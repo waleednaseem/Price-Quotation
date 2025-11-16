@@ -12,7 +12,7 @@ export async function GET() {
     if (!token) return NextResponse.json({ ok: true, user: null });
     const payload = verifySession(token);
     if (!payload) return NextResponse.json({ ok: true, user: null });
-    const r = await query("select id,name,email,role,picture from users where id=$1", [payload.id]);
+    const r = await query("select id,name,email,role,picture,approved,email_verified from users where id=$1", [payload.id]);
     if (!r.rowCount) return NextResponse.json({ ok: true, user: null });
     return NextResponse.json({ ok: true, user: r.rows[0] });
   } catch (err: any) {
