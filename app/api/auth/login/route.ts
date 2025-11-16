@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const u = r.rows[0];
     if (!u.approved) return NextResponse.json({ ok: false, error: "not approved" }, { status: 403 });
     if (!u.password_hash || !verifyPassword(password, u.password_hash)) return NextResponse.json({ ok: false, error: "invalid password" }, { status: 401 });
-    const token = setSessionCookie({ id: u.id, email: u.email, name: u.name, role: u.role });
+    const token = await setSessionCookie({ id: u.id, email: u.email, name: u.name, role: u.role });
     return NextResponse.json({ ok: true, id: u.id, email: u.email, name: u.name, role: u.role, token });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || "unknown error" }, { status: 500 });

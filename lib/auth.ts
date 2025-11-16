@@ -41,14 +41,14 @@ export function verifySession(token: string) {
   }
 }
 
-export function setSessionCookie(data: Record<string, any>) {
+export async function setSessionCookie(data: Record<string, any>) {
   const token = signSession(data);
-  const c = cookies() as any;
+  const c = await cookies();
   c.set("session", token, { httpOnly: true, sameSite: "lax", path: "/" });
   return token;
 }
 
-export function clearSessionCookie() {
-  const c = cookies() as any;
+export async function clearSessionCookie() {
+  const c = await cookies();
   c.set("session", "", { httpOnly: true, expires: new Date(0), path: "/" });
 }

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     } else {
       await query("insert into users(id,name,email,role,approved) values($1,$2,$3,$4,$5)", [id, name, email, role, true]);
     }
-    const token = setSessionCookie({ id, email, name, role });
+    const token = await setSessionCookie({ id, email, name, role });
     return NextResponse.json({ ok: true, id, email, name, role, token });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || "unknown error" }, { status: 500 });

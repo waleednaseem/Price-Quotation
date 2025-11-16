@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const c = cookies();
+    const c = await cookies();
     const token = c.get("session")?.value;
     if (!token) return NextResponse.json({ ok: true, user: null });
     const payload = verifySession(token);
