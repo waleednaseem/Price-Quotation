@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import ExportButtons from "../../../components/ExportButtons";
 import { Feature, NegotiationMessage, Quotation, useQuotations } from "../../../context/QuotationContext";
@@ -10,6 +10,8 @@ import { useClient } from "../../../context/ClientContext";
 export default function ClientViewPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id as string;
+  const searchParams = useSearchParams();
+  const tokenParam = searchParams?.get("token") || undefined;
   const { getQuotation, clientRemoveFeature, addNegotiationMessage, setStatus } = useQuotations();
   const { currentClient, logAction, history } = useClient();
   const quotation = useMemo(() => (id ? getQuotation(id) : undefined), [id, getQuotation]);
@@ -26,6 +28,13 @@ export default function ClientViewPage() {
   if (!quotation) {
     return <div className="mx-auto max-w-3xl px-4 py-6"><p>Quotation not found.</p></div>;
   }
+
+  const hasAccess = useMemo(() => {
+    if (quotation.status === "accepted") return true;
+    if (quotation.inviteToken && tokenParam && tokenParam === quotation.inviteToken) return true;
+    if (currentClient && quotation.clientId && currentClient.id === quotation.clientId) return true;
+    return false;
+  }, [quotation.status, quotation.inviteToken, tokenParam, currentClient?.id, quotation.clientId]);
 
   const handleRemove = (fid: string) => {
     clientRemoveFeature(quotation.id, fid);
@@ -76,9 +85,21 @@ export default function ClientViewPage() {
         </div>
         <ExportButtons quotation={quotation} />
       </div>
+      {!hasAccess && (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-white/95 p-6 text-center shadow-lg backdrop-blur-sm">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100">
+            <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-zinc-900">Access Required</h2>
+          <p className="mt-2 text-sm text-zinc-600">Please open this quotation from your invitation email link, or login as the assigned client to view details.</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         {/* Details */}
-        <div className="md:col-span-2 rounded-2xl border border-amber-200 bg-white/95 p-6 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl">
+        <div className={`md:col-span-2 rounded-2xl border border-amber-200 bg-white/95 p-6 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl ${!hasAccess ? 'opacity-60 pointer-events-none select-none' : ''}`}>
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 shadow-md">
               <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,19 +145,19 @@ export default function ClientViewPage() {
             </div>
           </div>
           <div className="mt-6 flex gap-3">
-            <button onClick={handleRequestUpdate} className="flex items-center gap-2 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-100 to-orange-100 px-5 py-2.5 font-semibold text-amber-900 shadow-md transition-all hover:scale-105 hover:shadow-lg">
+            <button onClick={handleRequestUpdate} disabled={!hasAccess} className="flex items-center gap-2 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-100 to-orange-100 px-5 py-2.5 font-semibold text-amber-900 shadow-md transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
               Request Update
             </button>
-            <button onClick={handleAccept} className="flex items-center gap-2 rounded-lg border border-green-300 bg-gradient-to-br from-green-500 to-emerald-500 px-5 py-2.5 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg">
+            <button onClick={handleAccept} disabled={!hasAccess} className="flex items-center gap-2 rounded-lg border border-green-300 bg-gradient-to-br from-green-500 to-emerald-500 px-5 py-2.5 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               Accept
             </button>
-            <button onClick={handleDecline} className="flex items-center gap-2 rounded-lg border border-red-300 bg-gradient-to-br from-red-500 to-rose-500 px-5 py-2.5 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg">
+            <button onClick={handleDecline} disabled={!hasAccess} className="flex items-center gap-2 rounded-lg border border-red-300 bg-gradient-to-br from-red-500 to-rose-500 px-5 py-2.5 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>

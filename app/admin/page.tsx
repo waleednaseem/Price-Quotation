@@ -29,6 +29,8 @@ export default function AdminPage() {
   const [deploymentCost, setDeploymentCost] = useState<number | undefined>(undefined);
   const [notes, setNotes] = useState("");
   const [featureDrafts, setFeatureDrafts] = useState<FeatureDraft[]>([]);
+  const [inviteEmail, setInviteEmail] = useState<string>("");
+  const [sendingInvite, setSendingInvite] = useState<boolean>(false);
 
   useEffect(() => {
     if (selected) {
@@ -87,6 +89,26 @@ export default function AdminPage() {
       features: featureDrafts.map((f) => ({ id: f.id || "", title: f.title, description: f.description, price: Number(f.price) || 0 })),
     } as any;
     updateQuotation(selected.id, updated);
+  };
+
+  const handleSendInvite = async () => {
+    if (!selected || !inviteEmail) return;
+    try {
+      setSendingInvite(true);
+      const res = await fetch('/api/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quotationId: selected.id, email: inviteEmail })
+      });
+      const data = await res.json();
+      if (!data?.ok) throw new Error(data?.error || 'Invite failed');
+      updateQuotation(selected.id, { inviteToken: data.token, inviteEmail, invitedAt: Date.now(), status: 'sent' } as any);
+      notifySuccess('Invite sent');
+    } catch (e: any) {
+      // Fall back toast already configured in axios; here keep silent or show error.
+    } finally {
+      setSendingInvite(false);
+    }
   };
 
   const handleAddFeatureToSelected = () => {
@@ -160,6 +182,22 @@ export default function AdminPage() {
               <label className="mb-1.5 block text-sm font-semibold text-zinc-700">Notes</label>
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Additional notes or requirements" className="input-elegant w-full resize-none rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 placeholder-zinc-400 shadow-sm transition-all focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200" />
             </div>
+            {selected && (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <label className="mb-1.5 block text-sm font-semibold text-zinc-700">Client Email (Invite)</label>
+                  <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="client@example.com" className="input-elegant w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 placeholder-zinc-400 shadow-sm transition-all focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                </div>
+                <div className="flex items-end">
+                  <button onClick={handleSendInvite} disabled={sendingInvite || !inviteEmail} className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-500 to-orange-500 px-4 py-2.5 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {sendingInvite ? 'Sending…' : 'Send Invite'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           <div className="mt-6">
             <div className="mb-3 flex items-center justify-between">

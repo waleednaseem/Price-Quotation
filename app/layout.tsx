@@ -17,6 +17,28 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Professional Quotation Management",
   description: "Elegant quotation system for modern businesses",
+  openGraph: {
+    title: "Professional Quotation Management",
+    description: "Create, negotiate, and finalize quotations with ease",
+    url: "http://localhost:3000/",
+    siteName: "Quotations",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Quotation Management Preview",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Professional Quotation Management",
+    description: "Elegant quotation system for modern businesses",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
@@ -39,13 +61,17 @@ export default function RootLayout({
                 Quotations
               </Link>
               <nav className="flex gap-2">
-                <Link href="/admin" className="group relative overflow-hidden rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 px-5 py-2.5 font-medium text-amber-900 shadow-sm transition-all hover:scale-105 hover:shadow-md">
-                  <span className="relative z-10">Admin</span>
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 opacity-0 transition-opacity group-hover:opacity-100" />
-                </Link>
-                <Link href="/client" className="group relative overflow-hidden rounded-lg border border-amber-200 bg-white px-5 py-2.5 font-medium text-amber-900 shadow-sm transition-all hover:scale-105 hover:shadow-md">
-                  <span className="relative z-10">Client</span>
+                <Link href="/about" className="group relative overflow-hidden rounded-lg border border-amber-200 bg-white px-5 py-2.5 font-medium text-amber-900 shadow-sm transition-all hover:scale-105 hover:shadow-md">
+                  <span className="relative z-10">About</span>
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity group-hover:opacity-100" />
+                </Link>
+                <Link href="/login" className="group relative overflow-hidden rounded-lg border border-amber-200 bg-white px-5 py-2.5 font-medium text-amber-900 shadow-sm transition-all hover:scale-105 hover:shadow-md">
+                  <span className="relative z-10">Login</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity group-hover:opacity-100" />
+                </Link>
+                <Link href="/signup" className="group relative overflow-hidden rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 px-5 py-2.5 font-medium text-amber-900 shadow-sm transition-all hover:scale-105 hover:shadow-md">
+                  <span className="relative z-10">Register</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
               </nav>
             </div>

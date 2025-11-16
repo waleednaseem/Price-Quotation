@@ -1,9 +1,10 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useClient } from "../context/ClientContext";
 import { notifyError, notifySuccess } from "../utils/toast";
+import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 
 type View = "login" | "signup";
@@ -27,6 +28,8 @@ export default function Auth({ initialView = "login" }: { initialView?: View }) 
   const [confirm, setConfirm] = useState("");
   const [terms, setTerms] = useState(false);
   const [signupErrors, setSignupErrors] = useState<Record<string, string>>({});
+  const [role, setRole] = useState<"admin" | "client">("client");
+  const searchParams = useSearchParams();
 
   const emailRegex = useMemo(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/, []);
 
@@ -56,28 +59,45 @@ export default function Auth({ initialView = "login" }: { initialView?: View }) 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateLogin()) return;
-    // Try to find existing client by email, otherwise create a lightweight profile
-    const existing = clients.find((c) => (c.email || "").toLowerCase() === loginEmail.toLowerCase());
-    const derivedName = existing?.name || loginEmail.split("@")[0];
-    const profile = existing || { id: `client-${uuidv4()}`, name: derivedName, email: loginEmail, picture: toAvatar(derivedName) };
-    loginWithProfile(profile);
-    notifySuccess("Logged in successfully");
-    if (remember) {
-      try { localStorage.setItem("rememberEmail", loginEmail); } catch {}
-    }
-    router.push("/client");
+    axios.post("/api/auth/login", { email: loginEmail.toLowerCase(), password: loginPassword }).then((r) => {
+      const { id, email, name, role } = r.data;
+      const profile = { id, name, email, picture: toAvatar(name), role };
+      addOrUpdateClient(profile);
+      loginWithProfile(profile);
+      notifySuccess("Logged in successfully");
+      if (remember) { try { localStorage.setItem("rememberEmail", loginEmail); } catch {} }
+      router.push(role === "admin" ? "/admin" : "/client");
+    }).catch((err) => {
+      const msg = err?.response?.data?.error || err?.message || "Login failed";
+      notifyError(msg);
+    });
   };
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateSignup()) return;
-    const id = `client-${uuidv4()}`;
-    const profile = { id, name: name.trim(), email, picture: toAvatar(name.trim()) };
-    addOrUpdateClient(profile);
-    loginWithProfile(profile);
-    notifySuccess("Account created and logged in");
-    router.push("/client");
+    axios.post('/api/auth/signup', { name: name.trim(), email: email.toLowerCase(), role, password }).then(() => {
+      fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'register', email: email.toLowerCase(), name: name.trim(), role }) }).catch(() => {});
+      notifySuccess("Verification email sent. Please approve via link to sign in");
+      router.push("/login");
+    }).catch((err) => {
+      const msg = err?.response?.data?.error || err?.message || "Signup failed";
+      notifyError(msg);
+    });
   };
+
+  useEffect(() => {
+    const approveToken = searchParams?.get("approveToken");
+    if (!approveToken) return;
+    axios.post('/api/auth/approve', { approveToken }).then((r) => {
+      const { id, email, name, role } = r.data;
+      const profile = { id, name, email, picture: toAvatar(name), role };
+      addOrUpdateClient(profile);
+      loginWithProfile(profile);
+      notifySuccess("Account approved and signed in");
+      router.push(role === "admin" ? "/admin" : "/client");
+    }).catch(() => {});
+  }, [searchParams]);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -135,6 +155,19 @@ export default function Auth({ initialView = "login" }: { initialView?: View }) 
                   Login
                 </h2>
                 <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-zinc-700">Role</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className={`flex items-center gap-2 rounded-lg border ${role === "client" ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50" : "border-zinc-300 bg-white"} px-3 py-2 text-sm text-zinc-800 shadow-sm transition-all`}>
+                        <input type="radio" name="role" value="client" checked={role === "client"} onChange={() => setRole("client")} />
+                        Client / Customer
+                      </label>
+                      <label className={`flex items-center gap-2 rounded-lg border ${role === "admin" ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50" : "border-zinc-300 bg-white"} px-3 py-2 text-sm text-zinc-800 shadow-sm transition-all`}>
+                        <input type="radio" name="role" value="admin" checked={role === "admin"} onChange={() => setRole("admin")} />
+                        Admin / Businessman
+                      </label>
+                    </div>
+                  </div>
                   <div>
                     <label htmlFor="login-email" className="mb-1.5 block text-sm font-semibold text-zinc-700">Email</label>
                     <input

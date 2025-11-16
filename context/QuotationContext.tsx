@@ -1,7 +1,8 @@
 "use client";
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { notifyInfo, notifySuccess } from "../utils/toast";
+import axios from "axios";
 
 export type Sender = "admin" | "client";
 
@@ -38,6 +39,9 @@ export interface Quotation {
   totalCost: number;
   status: QuotationStatus;
   negotiationThread: NegotiationMessage[];
+  inviteToken?: string;
+  inviteEmail?: string;
+  invitedAt?: number;
 }
 
 export interface CreateQuotationInput {
@@ -71,51 +75,43 @@ const recalcTotal = (q: Quotation): number => {
   return featureSum + (q.deploymentCost ?? 0);
 };
 
-const sampleQuotations: Quotation[] = [
-  {
-    id: "q-acme-website",
-    projectName: "Website Revamp",
-    companyName: "Acme Corp",
-    clientId: "client-acme",
-    features: [
-      { id: "f-landing", title: "Landing Page", description: "Hero + CTA", price: 800 },
-      { id: "f-blog", title: "Blog", description: "CMS setup", price: 1200 },
-      { id: "f-auth", title: "Auth", description: "Login/Signup", price: 1000 },
-    ],
-    deploymentCost: 300,
-    notes: "Includes initial content migration.",
-    totalCost: 0, // computed below
-    status: "draft",
-    negotiationThread: [
-      { id: "m1", sender: "client", text: "Can we reduce auth cost?", timestamp: 1700000000000 },
-      { id: "m2", sender: "admin", text: "Possible with reduced scope.", timestamp: 1700003600000 },
-    ],
-  },
-  {
-    id: "q-globex-mvp",
-    projectName: "Mobile App MVP",
-    companyName: "Globex",
-    clientId: "client-globex",
-    features: [
-      { id: "f-onboarding", title: "Onboarding", description: "Walkthrough screens", price: 600 },
-      { id: "f-push", title: "Push Notifications", description: "FCM integration", price: 700 },
-    ],
-    deploymentCost: 250,
-    notes: "iOS and Android basic support.",
-    totalCost: 0,
-    status: "sent",
-    negotiationThread: [],
-  },
-];
-
-// Initialize totals
-for (const q of sampleQuotations) q.totalCost = recalcTotal(q);
+const sampleQuotations: Quotation[] = [];
 
 export function QuotationProvider({ children }: { children: React.ReactNode }) {
   const [quotations, setQuotations] = useState<Quotation[]>(sampleQuotations);
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(
     quotations[0]?.id ?? null
   );
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await axios.get("/api/quotations");
+        const data = (r.data?.quotations || []).map((row: any): Quotation => ({
+          id: row.id,
+          projectName: row.project_name,
+          companyName: row.company_name,
+          clientId: row.client_id || undefined,
+          features: (row.features || []).map((f: any) => ({
+            id: f.id,
+            title: f.title,
+            description: f.description || undefined,
+            price: Number(f.price),
+            clientProposedPrice: f.client_proposed_price != null ? Number(f.client_proposed_price) : undefined,
+          })),
+          deploymentCost: row.deployment_cost != null ? Number(row.deployment_cost) : undefined,
+          notes: row.notes || undefined,
+          totalCost: Number(row.total_cost || 0),
+          status: row.status,
+          negotiationThread: [],
+          inviteToken: row.invite_token || undefined,
+          inviteEmail: row.invite_email || undefined,
+          invitedAt: row.invited_at ? new Date(row.invited_at).getTime() : undefined,
+        }));
+        setQuotations(data);
+        setSelectedQuotationId(data[0]?.id ?? null);
+      } catch {}
+    })();
+  }, []);
 
   const getQuotation = (id: string) => quotations.find((q) => q.id === id);
   const selectQuotation = (id: string | null) => setSelectedQuotationId(id);
@@ -123,93 +119,91 @@ export function QuotationProvider({ children }: { children: React.ReactNode }) {
   const createQuotation = (input: CreateQuotationInput) => {
     const id = uuidv4();
     const features = (input.features ?? []).map((f) => ({ ...f, id: uuidv4() }));
-    const newQ: Quotation = {
-      id,
-      projectName: input.projectName,
-      companyName: input.companyName,
-      clientId: input.clientId,
-      features,
-      deploymentCost: input.deploymentCost,
-      notes: input.notes,
-      totalCost: 0,
-      status: "draft",
-      negotiationThread: [],
-    };
-    newQ.totalCost = recalcTotal(newQ);
-    setQuotations((prev) => [newQ, ...prev]);
-    setSelectedQuotationId(id);
-    notifySuccess("Quotation created");
+    const payload = { id, projectName: input.projectName, companyName: input.companyName, clientId: input.clientId, deploymentCost: input.deploymentCost, notes: input.notes, features };
+    axios.post("/api/quotations", payload).then((r) => {
+      const row = r.data?.quotation;
+      const q: Quotation = {
+        id: row.id,
+        projectName: row.project_name,
+        companyName: row.company_name,
+        clientId: row.client_id || undefined,
+        features: (row.features || []).map((f: any) => ({ id: f.id, title: f.title, description: f.description || undefined, price: Number(f.price), clientProposedPrice: f.client_proposed_price != null ? Number(f.client_proposed_price) : undefined })),
+        deploymentCost: row.deployment_cost != null ? Number(row.deployment_cost) : undefined,
+        notes: row.notes || undefined,
+        totalCost: Number(row.total_cost || 0),
+        status: row.status,
+        negotiationThread: [],
+      };
+      setQuotations((prev) => [q, ...prev]);
+      setSelectedQuotationId(id);
+      notifySuccess("Quotation created");
+    });
     return id;
   };
 
   const updateQuotation = (id: string, updates: Partial<Quotation>) => {
-    setQuotations((prev) => {
-      const next = prev.map((q) => (q.id === id ? { ...q, ...updates } : q));
-      const q = next.find((x) => x.id === id);
-      if (q) q.totalCost = recalcTotal(q);
-      return next;
+    const payload: any = {};
+    if (updates.projectName !== undefined) payload.projectName = updates.projectName;
+    if (updates.companyName !== undefined) payload.companyName = updates.companyName;
+    if (updates.clientId !== undefined) payload.clientId = updates.clientId;
+    if (updates.deploymentCost !== undefined) payload.deploymentCost = updates.deploymentCost;
+    if (updates.notes !== undefined) payload.notes = updates.notes;
+    if (updates.status !== undefined) payload.status = updates.status;
+    axios.patch(`/api/quotations/${id}`, payload).then((r) => {
+      const row = r.data?.quotation;
+      const q: Quotation = {
+        id: row.id,
+        projectName: row.project_name,
+        companyName: row.company_name,
+        clientId: row.client_id || undefined,
+        features: (row.features || []).map((f: any) => ({ id: f.id, title: f.title, description: f.description || undefined, price: Number(f.price), clientProposedPrice: f.client_proposed_price != null ? Number(f.client_proposed_price) : undefined })),
+        deploymentCost: row.deployment_cost != null ? Number(row.deployment_cost) : undefined,
+        notes: row.notes || undefined,
+        totalCost: Number(row.total_cost || 0),
+        status: row.status,
+        negotiationThread: [],
+      };
+      setQuotations((prev) => prev.map((x) => (x.id === id ? q : x)));
+      notifyInfo("Quotation updated");
     });
-    notifyInfo("Quotation updated");
   };
 
   const addFeature = (id: string, feature: Omit<Feature, "id">) => {
     const f: Feature = { ...feature, id: uuidv4() };
-    setQuotations((prev) => {
-      const next = prev.map((q) =>
-        q.id === id ? { ...q, features: [...q.features, f] } : q
-      );
-      const q = next.find((x) => x.id === id);
-      if (q) q.totalCost = recalcTotal(q);
-      return next;
+    axios.post(`/api/quotations/${id}/features`, { feature: { ...f, clientProposedPrice: f.clientProposedPrice } }).then(() => {
+      setQuotations((prev) => prev.map((q) => (q.id === id ? { ...q, features: [...q.features, f], totalCost: recalcTotal({ ...q, features: [...q.features, f] }) } : q)));
+      notifySuccess("Feature added");
     });
-    notifySuccess("Feature added");
   };
 
   const removeFeature = (id: string, featureId: string) => {
-    setQuotations((prev) => {
-      const next = prev.map((q) =>
-        q.id === id ? { ...q, features: q.features.filter((f) => f.id !== featureId) } : q
-      );
-      const q = next.find((x) => x.id === id);
-      if (q) q.totalCost = recalcTotal(q);
-      return next;
+    axios.delete(`/api/quotations/${id}/features/${featureId}`).then(() => {
+      setQuotations((prev) => prev.map((q) => (q.id === id ? { ...q, features: q.features.filter((f) => f.id !== featureId), totalCost: recalcTotal({ ...q, features: q.features.filter((f) => f.id !== featureId) }) } : q)));
+      notifyInfo("Feature removed");
     });
-    notifyInfo("Feature removed");
   };
 
   const clientRemoveFeature = removeFeature;
 
   const clientProposePrice = (id: string, featureId: string, price: number) => {
-    setQuotations((prev) => {
-      const next = prev.map((q) => {
-        if (q.id !== id) return q;
-        return {
-          ...q,
-          features: q.features.map((f) =>
-            f.id === featureId ? { ...f, clientProposedPrice: price } : f
-          ),
-        };
-      });
-      return next;
+    axios.patch(`/api/quotations/${id}/features/${featureId}`, { clientProposedPrice: price }).then(() => {
+      setQuotations((prev) => prev.map((q) => (q.id === id ? { ...q, features: q.features.map((f) => (f.id === featureId ? { ...f, clientProposedPrice: price } : f)) } : q)));
+      notifyInfo("Client proposed new price");
     });
-    notifyInfo("Client proposed new price");
   };
 
   const addNegotiationMessage = (id: string, sender: Sender, text: string) => {
-    const msg: NegotiationMessage = {
-      id: uuidv4(),
-      sender,
-      text,
-      timestamp: Date.now(),
-    };
-    setQuotations((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, negotiationThread: [...q.negotiationThread, msg] } : q))
-    );
+    axios.post(`/api/quotations/${id}/messages`, { senderRole: sender, text }).then((r) => {
+      const msg: NegotiationMessage = { id: r.data?.id || uuidv4(), sender, text, timestamp: Date.now() };
+      setQuotations((prev) => prev.map((q) => (q.id === id ? { ...q, negotiationThread: [...q.negotiationThread, msg] } : q)));
+    });
   };
 
   const setStatus = (id: string, status: QuotationStatus) => {
-    setQuotations((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
-    notifyInfo("Status updated: " + status);
+    axios.patch(`/api/quotations/${id}`, { status }).then(() => {
+      setQuotations((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
+      notifyInfo("Status updated: " + status);
+    });
   };
 
   const value = useMemo<QuotationContextValue>(

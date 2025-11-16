@@ -21,55 +21,38 @@ export default function Home() {
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-zinc-600">
               Streamline your proposal process with our elegant quotation management system. Create, negotiate, and finalize deals with ease.
             </p>
+            <div className="mx-auto mt-6 flex max-w-md items-center justify-center gap-3">
+              <Link
+                href="/signup"
+                className="group relative overflow-hidden rounded-lg border border-amber-300 bg-gradient-to-br from-amber-500 to-orange-500 px-6 py-3 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
+                aria-label="Register and get started"
+              >
+                <span className="relative z-10">Get Started</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-600 to-orange-600 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/client"
+                className="group relative overflow-hidden rounded-lg border border-amber-200 bg-white px-6 py-3 font-medium text-amber-900 shadow-sm transition-all hover:scale-105 hover:shadow-md"
+                aria-label="Open client portal"
+              >
+                <span className="relative z-10">Client Portal</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="mx-auto mt-8 flex flex-wrap items-center justify-center gap-6 text-zinc-500">
+              <span className="text-xs font-medium uppercase tracking-wider">Trusted by teams</span>
+              <div className="flex items-center gap-6" aria-hidden="true">
+                <div className="h-6 w-20 rounded bg-gradient-to-br from-amber-100 to-orange-100" />
+                <div className="h-6 w-20 rounded bg-gradient-to-br from-amber-100 to-orange-100" />
+                <div className="h-6 w-20 rounded bg-gradient-to-br from-amber-100 to-orange-100" />
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <Link href="/admin" className="group relative overflow-hidden rounded-2xl border border-amber-200 bg-white/90 p-8 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="relative space-y-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg transition-transform group-hover:scale-110">
-                  <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-zinc-900">Admin Portal</h2>
-                  <p className="mt-2 text-zinc-600">Create, edit, and manage quotations with comprehensive tools. Export to PDF with professional formatting.</p>
-                </div>
-                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-amber-600">
-                  Get started
-                  <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/client" className="group relative overflow-hidden rounded-2xl border border-amber-200 bg-white/90 p-8 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="relative space-y-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg transition-transform group-hover:scale-110">
-                  <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-zinc-900">Client Portal</h2>
-                  <p className="mt-2 text-zinc-600">Review quotations, negotiate terms, and manage your proposals. Seamless collaboration with your team.</p>
-                </div>
-                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-orange-600">
-                  View quotations
-                  <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-          </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-amber-100 bg-white/80 p-6 text-center shadow-sm backdrop-blur-sm">
+            <div className="group relative overflow-hidden rounded-xl border border-amber-100 bg-white/80 p-6 text-center shadow-sm backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-md">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100">
                 <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -78,7 +61,8 @@ export default function Home() {
               <h3 className="font-semibold text-zinc-900">Lightning Fast</h3>
               <p className="mt-1 text-sm text-zinc-600">Create quotations in minutes</p>
             </div>
-            <div className="rounded-xl border border-amber-100 bg-white/80 p-6 text-center shadow-sm backdrop-blur-sm">
+            <div className="group relative overflow-hidden rounded-xl border border-amber-100 bg-white/80 p-6 text-center shadow-sm backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-md">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100">
                 <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -87,7 +71,8 @@ export default function Home() {
               <h3 className="font-semibold text-zinc-900">Secure & Reliable</h3>
               <p className="mt-1 text-sm text-zinc-600">Your data is always protected</p>
             </div>
-            <div className="rounded-xl border border-amber-100 bg-white/80 p-6 text-center shadow-sm backdrop-blur-sm">
+            <div className="group relative overflow-hidden rounded-xl border border-amber-100 bg-white/80 p-6 text-center shadow-sm backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-md">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100">
                 <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
@@ -95,6 +80,28 @@ export default function Home() {
               </div>
               <h3 className="font-semibold text-zinc-900">Real-time Collaboration</h3>
               <p className="mt-1 text-sm text-zinc-600">Negotiate and finalize deals</p>
+            </div>
+          </div>
+          <div className="mt-8 flex items-center justify-center">
+            <div className="group relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 px-6 py-5 text-center shadow-lg backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+              <div className="relative flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 shadow-md">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className="font-semibold text-zinc-900">Start creating quotations today</div>
+                  <div className="text-sm text-zinc-600">It takes less than 2 minutes to get going</div>
+                </div>
+                <Link href="/signup" className="ml-2 flex items-center gap-2 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-500 to-orange-500 px-5 py-3 font-semibold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg">
+                  <span>Get Started</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
             </div>
           </div>
         </main>
